@@ -2,8 +2,7 @@ import { useState } from "react";
 
 import { useLabs } from "../../context/LabContext";
 import Select from "../common/Select";
-import { DEPARTMENTS, SEMESTERS, SECTIONS } from "../../utils/constants";
-
+import { DEPARTMENTS, SEMESTERS } from "../../utils/constants";
 const initialState = {
   labCode: "",
   labName: "",

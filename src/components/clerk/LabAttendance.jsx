@@ -1,18 +1,47 @@
 import React, { useEffect, useState } from "react";
 import { useStudents } from "../../context/StudentContext";
+import { useLabs } from "../../context/LabContext";
 
 const LabAttendance = () => {
     const { students = [] } = useStudents();
+    const { labs = [] } = useLabs();
 
     const [attendance, setAttendance] = useState([]);
-    const [date, setDate] = useState("2026-10-06");
+
+    const [date, setDate] = useState(
+        new Date().toISOString().split("T")[0]
+    );
+
     const [lab, setLab] = useState("DBMS Lab");
     const [loading, setLoading] = useState(false);
 
     // =====================================================
+    // SET FIRST AVAILABLE LAB
+    // =====================================================
+
+    useEffect(() => {
+        if (!labs || labs.length === 0) {
+            return;
+        }
+
+        const currentLabExists = labs.some(
+            (item) => item.name === lab
+        );
+
+        if (!currentLabExists) {
+            setLab(labs[0].name);
+        }
+    }, [labs, lab]);
+
+    // =====================================================
     // DIRECT BACKEND CALL
     // =====================================================
+
     const loadAttendance = async () => {
+        if (!lab) {
+            return;
+        }
+
         try {
             setLoading(true);
 
@@ -55,6 +84,7 @@ const LabAttendance = () => {
     // =====================================================
     // LOAD ON PAGE OPEN / DATE / LAB CHANGE
     // =====================================================
+
     useEffect(() => {
         loadAttendance();
     }, [date, lab]);
@@ -62,6 +92,7 @@ const LabAttendance = () => {
     // =====================================================
     // AUTO REFRESH EVERY 2 SECONDS
     // =====================================================
+
     useEffect(() => {
         const timer = setInterval(() => {
             loadAttendance();
@@ -73,6 +104,7 @@ const LabAttendance = () => {
     // =====================================================
     // FIND ATTENDANCE USING USN
     // =====================================================
+
     const getRecord = (student) => {
         if (!student) {
             return null;
@@ -98,6 +130,7 @@ const LabAttendance = () => {
     // =====================================================
     // COUNTS
     // =====================================================
+
     const presentCount = students.filter(
         (student) => {
             const record = getRecord(student);
@@ -117,6 +150,7 @@ const LabAttendance = () => {
     // =====================================================
     // MANUAL PRESENT
     // =====================================================
+
     const markPresent = async (student) => {
         try {
             const response = await fetch(
@@ -157,6 +191,7 @@ const LabAttendance = () => {
     // =====================================================
     // MANUAL ABSENT
     // =====================================================
+
     const markAbsent = async (student) => {
         try {
             const response = await fetch(
@@ -197,6 +232,7 @@ const LabAttendance = () => {
     // =====================================================
     // ENTRY
     // =====================================================
+
     const recordEntry = async (student) => {
         try {
             const time =
@@ -247,6 +283,7 @@ const LabAttendance = () => {
     // =====================================================
     // EXIT
     // =====================================================
+
     const recordExit = async (student) => {
         try {
             const time =
@@ -297,6 +334,7 @@ const LabAttendance = () => {
     // =====================================================
     // UI
     // =====================================================
+
     return (
         <div className="bg-white rounded-lg shadow p-6">
 
@@ -309,6 +347,7 @@ const LabAttendance = () => {
             </p>
 
             {/* FILTERS */}
+
             <div className="flex gap-6 mb-6">
 
                 <div>
@@ -338,17 +377,20 @@ const LabAttendance = () => {
                         }
                         className="border rounded px-3 py-2"
                     >
-                        <option value="DBMS Lab">
-                            DBMS Lab
-                        </option>
-
-                        <option value="Java Lab">
-                            Java Lab
-                        </option>
-
-                        <option value="Web Lab">
-                            Web Lab
-                        </option>
+                        {labs.length > 0 ? (
+                            labs.map((item) => (
+                                <option
+                                    key={item.id}
+                                    value={item.name}
+                                >
+                                    {item.name}
+                                </option>
+                            ))
+                        ) : (
+                            <option value="">
+                                No labs available
+                            </option>
+                        )}
                     </select>
                 </div>
 
@@ -361,6 +403,7 @@ const LabAttendance = () => {
             )}
 
             {/* SUMMARY */}
+
             <div className="grid grid-cols-3 gap-4 mb-6">
 
                 <div className="bg-gray-100 rounded-lg p-4">
@@ -396,6 +439,7 @@ const LabAttendance = () => {
             </div>
 
             {/* TABLE */}
+
             <div className="overflow-x-auto">
 
                 <table className="w-full border-collapse">
@@ -487,11 +531,13 @@ const LabAttendance = () => {
 
                                     <td className="border p-3">
                                         {record?.entryTime ||
+                                            record?.entry_time ||
                                             "-"}
                                     </td>
 
                                     <td className="border p-3">
                                         {record?.exitTime ||
+                                            record?.exit_time ||
                                             "-"}
                                     </td>
 
